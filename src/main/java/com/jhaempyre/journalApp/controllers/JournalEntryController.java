@@ -1,7 +1,11 @@
 package com.jhaempyre.journalApp.controllers;
 
 import com.jhaempyre.journalApp.entity.JournalEntry;
+import com.jhaempyre.journalApp.entity.User;
+import com.jhaempyre.journalApp.repository.UserEntryRepository;
 import com.jhaempyre.journalApp.service.JournalEntryService;
+import com.jhaempyre.journalApp.service.UserEntryService;
+import jdk.jfr.Unsigned;
 import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,11 +21,18 @@ public class JournalEntryController {
 
     @Autowired
     private JournalEntryService journalEntryService;
+    @Autowired
+    private UserEntryService userEntryService ;
 
-    @GetMapping("/getAll")
-    public ResponseEntity<?> getAll() {
+    @Autowired
+    private UserEntryRepository userEntryRepository ;
+
+    @GetMapping("/{userName}/getAll")
+    public ResponseEntity<?> getAllJournalByUser(@PathVariable String userName) {
         try {
-            List<JournalEntry> entries = journalEntryService.getAllEntry();
+            User user = userEntryRepository.findByUserName(userName).orElse(null);
+            assert user != null;
+            List<ObjectId> entries = user.getJournalEntryIds();
             if (!entries.isEmpty()) {
                 return ResponseEntity.ok(entries);
             } else {
@@ -32,11 +43,12 @@ public class JournalEntryController {
         }
     }
 
-    @PostMapping("/postSome")
-    public ResponseEntity<?> createEntry(@RequestBody JournalEntry entry) {
+    @PostMapping("/{userName}/postSome")
+    public ResponseEntity<?> createEntry(@RequestBody JournalEntry entry , @PathVariable String userName) {
         try {
-            journalEntryService.saveEntry(entry);
-            return ResponseEntity.status(HttpStatus.CREATED).body(entry);
+
+            journalEntryService.saveEntry(entry,userName);
+                        return ResponseEntity.status(HttpStatus.CREATED).body(entry);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
         }
@@ -54,10 +66,10 @@ public class JournalEntryController {
     }
 
 
-    @DeleteMapping("/delete/{id}")
-    public ResponseEntity<?> deleteById(@PathVariable("id") ObjectId id) {
+    @DeleteMapping("/{userName}/delete/{id}")
+    public ResponseEntity<?> deleteById(@PathVariable("id") ObjectId id,@PathVariable String userName) {
         try {
-            journalEntryService.deleteById(id);
+            journalEntryService.deleteById(id,userName);
             return ResponseEntity.ok("Journal Entry deleted successfully");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
