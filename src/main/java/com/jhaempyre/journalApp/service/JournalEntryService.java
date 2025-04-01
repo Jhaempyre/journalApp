@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -26,6 +27,7 @@ public class JournalEntryService {
 	@Autowired
 	private UserEntryRepository userEntryRepository;
 
+	@Transactional
 	public JournalEntry saveEntry(JournalEntry journalEntry,String userName) {
 		User user = userEntryRepository.findByUserName(userName).orElse(null);
 		journalEntry.setDate(LocalDateTime.now());
